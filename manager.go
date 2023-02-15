@@ -16,7 +16,7 @@ import (
 type ServiceManager struct {
 	statusCallback func(string, ServiceStatus)
 	timeout        time.Duration
-	logger         *zerolog.Logger
+	logger         zerolog.Logger
 	ctx            context.Context
 	ctxCancel      func()
 	sigterm        chan os.Signal
@@ -28,19 +28,14 @@ type ServiceManager struct {
 }
 
 // NewServiceManager creates and returns a new ServiceManager instance.
-func NewServiceManager(statusCallback func(string, ServiceStatus), logger *zerolog.Logger,
+func NewServiceManager(statusCallback func(string, ServiceStatus), logger zerolog.Logger,
 	shutdownTimeout time.Duration) *ServiceManager {
 	sm := &ServiceManager{
 		statusCallback: statusCallback,
 		timeout:        shutdownTimeout,
 		logger:         logger,
 		sigterm:        make(chan os.Signal),
-	}
-
-	// Create default logger if nil:
-	if sm.logger == nil {
-		l := zerolog.New(os.Stderr).With().Timestamp().Str("component", "ServiceManager").Logger()
-		sm.logger = &l
+		services:       make(map[string]Service),
 	}
 
 	// Create cancellable context:
@@ -173,7 +168,7 @@ func (s *ServiceManager) serviceShutdown(name string) {
 		s.shutdown <- true
 	} else {
 		for _, v := range s.services {
-			v.Shutdown()
+			go v.Shutdown()
 		}
 	}
 }
