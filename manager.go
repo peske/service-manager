@@ -49,6 +49,11 @@ func NewServiceManager(statusCallback func(string, ServiceStatus), logger zerolo
 	return sm
 }
 
+// Context returns the main context used by the manager.
+func (s *ServiceManager) Context() context.Context {
+	return s.ctx
+}
+
 // RegisterAndStart registers and starts a new service.
 // The service will be started in a separate thread, so this
 // method will not block.
